@@ -7,7 +7,7 @@ public class Gun : MonoBehaviour {
 
     [Header("References")]
     [SerializeField] private GunData gunData;
-    [SerializeField] private Transform muzzle;
+    [SerializeField] private Transform cam;
     
     float timeSinceLastShot;
 
@@ -16,10 +16,11 @@ public class Gun : MonoBehaviour {
         PlayerShoot.reloadInput += StartReload;
     }
 
+    private void OnDisable() => gunData.reloading = false;
+
     public void StartReload() {
-        if (!gunData.reloading) {
+        if (!gunData.reloading && this.gameObject.activeSelf)
             StartCoroutine(Reload());
-        }
     }
 
     private IEnumerator Reload() {
@@ -34,14 +35,10 @@ public class Gun : MonoBehaviour {
 
     private bool CanShoot() => !gunData.reloading && timeSinceLastShot > 1f / (gunData.fireRate / 60f);
 
-    private void Shoot() 
-    {
-        if (gunData.currentAmmo > 0) 
-        {
-            if (CanShoot()) 
-            {
-                if (Physics.Raycast(muzzle.position, muzzle.forward, out RaycastHit hitInfo, gunData.maxDistance))
-                {
+    private void Shoot() {
+        if (gunData.currentAmmo > 0) {
+            if (CanShoot()) {
+                if (Physics.Raycast(cam.position, cam.forward, out RaycastHit hitInfo, gunData.maxDistance)){
                     IDamageable damageable = hitInfo.transform.GetComponent<IDamageable>();
                     damageable?.TakeDamage(gunData.damage);
                 }
@@ -56,10 +53,8 @@ public class Gun : MonoBehaviour {
     private void Update() {
         timeSinceLastShot += Time.deltaTime;
 
-        Debug.DrawRay(muzzle.position, muzzle.forward * gunData.maxDistance);
+        Debug.DrawRay(cam.position, cam.forward * gunData.maxDistance);
     }
 
-    private void OnGunShot() {
-
-    }
+    private void OnGunShot() {  }
 }
